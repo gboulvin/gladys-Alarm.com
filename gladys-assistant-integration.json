@@ -1,0 +1,990 @@
+{
+  "manifest_version": 1,
+  "type": "device",
+  "name": "Alarm.com",
+  "description": {
+    "en": "Control your Alarm.com security system: arming, sensors, locks, garage doors, lights.",
+    "fr": "Pilotez votre alarme Alarm.com : armement, capteurs, serrures, garages, lumières.",
+    "de": "Steuern Sie Ihre Alarm.com-Anlage: Scharfschaltung, Sensoren, Schlösser, Tore, Licht.",
+    "es": "Controle su alarma Alarm.com: armado, sensores, cerraduras, garajes y luces."
+  },
+  "version": "0.0.0",
+  "docker_image": "ghcr.io/gboulvin/gladys-alarm.com:0.0.0",
+  "gladys_version": ">=5.1.0",
+  "cover_image": "https://raw.githubusercontent.com/gboulvin/gladys-alarm.com/main/cover.png",
+  "categories": ["security", "lighting", "climate"],
+  "transports": ["cloud"],
+  "config_schema": [
+    {
+      "key": "intro",
+      "type": "section",
+      "label": {
+        "en": "Your Alarm.com account",
+        "fr": "Votre compte Alarm.com",
+        "de": "Ihr Alarm.com-Konto",
+        "es": "Su cuenta de Alarm.com"
+      },
+      "description": {
+        "en": "Sign in with the username and password of the Alarm.com app or website. Alarm.com is a cloud service: Gladys needs Internet access. If your account uses two-factor authentication, the actions below let you enter the code once.",
+        "fr": "Connectez-vous avec l'identifiant et le mot de passe de l'application ou du site Alarm.com. Alarm.com est un service cloud : Gladys a besoin d'Internet. Si votre compte utilise la double authentification, les actions ci-dessous permettent de saisir le code une seule fois.",
+        "de": "Melden Sie sich mit dem Benutzernamen und dem Passwort der Alarm.com-App oder -Website an. Alarm.com ist ein Cloud-Dienst: Gladys braucht Internet. Nutzt Ihr Konto die Zwei-Faktor-Authentifizierung, geben Sie den Code einmalig über die Aktionen unten ein.",
+        "es": "Inicie sesión con el usuario y la contraseña de la aplicación o del sitio de Alarm.com. Alarm.com es un servicio en la nube: Gladys necesita Internet. Si su cuenta usa la autenticación de doble factor, las acciones de abajo permiten introducir el código una sola vez."
+      },
+      "links": [
+        {
+          "url": "https://www.alarm.com/login",
+          "label": {
+            "en": "Alarm.com website",
+            "fr": "Site Alarm.com",
+            "de": "Alarm.com-Website",
+            "es": "Sitio de Alarm.com"
+          }
+        }
+      ]
+    },
+    {
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username",
+        "fr": "Identifiant",
+        "de": "Benutzername",
+        "es": "Usuario"
+      },
+      "placeholder": {
+        "en": "e.g. john@example.com",
+        "fr": "ex. jean@exemple.fr",
+        "de": "z. B. max@beispiel.de",
+        "es": "p. ej. juan@ejemplo.es"
+      },
+      "required": true
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe",
+        "de": "Passwort",
+        "es": "Contraseña"
+      },
+      "required": true
+    },
+    {
+      "key": "poll_frequency",
+      "type": "number",
+      "label": {
+        "en": "Refresh interval (s)",
+        "fr": "Intervalle de rafraîchissement (s)",
+        "de": "Aktualisierungsintervall (s)",
+        "es": "Intervalo de actualización (s)"
+      },
+      "description": {
+        "en": "How often Alarm.com is read, in seconds (30 seconds minimum).",
+        "fr": "Fréquence de lecture d'Alarm.com, en secondes (30 secondes minimum).",
+        "de": "Wie oft Alarm.com gelesen wird, in Sekunden (mindestens 30 Sekunden).",
+        "es": "Frecuencia de lectura de Alarm.com, en segundos (30 segundos como mínimo)."
+      },
+      "required": false,
+      "default": 60,
+      "min": 30,
+      "max": 3600
+    },
+    {
+      "key": "arming",
+      "type": "section",
+      "label": {
+        "en": "Arming options",
+        "fr": "Options d'armement",
+        "de": "Scharfschalt-Optionen",
+        "es": "Opciones de armado"
+      },
+      "description": {
+        "en": "Used when Gladys arms the system (device, scene or dashboard), when your panel supports them.",
+        "fr": "Utilisées quand Gladys arme le système (appareil, scène ou tableau de bord), si votre centrale les prend en charge.",
+        "de": "Gelten, wenn Gladys die Anlage scharf schaltet (Gerät, Szene oder Dashboard), sofern Ihre Zentrale sie unterstützt.",
+        "es": "Se usan cuando Gladys arma el sistema (dispositivo, escena o panel), si su central las admite."
+      }
+    },
+    {
+      "key": "force_bypass",
+      "type": "boolean",
+      "label": {
+        "en": "Bypass open sensors",
+        "fr": "Ignorer les capteurs ouverts",
+        "de": "Offene Sensoren überbrücken",
+        "es": "Anular sensores abiertos"
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "no_entry_delay",
+      "type": "boolean",
+      "label": {
+        "en": "No entry delay",
+        "fr": "Sans délai d'entrée",
+        "de": "Ohne Eingangsverzögerung",
+        "es": "Sin retardo de entrada"
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "silent_arming",
+      "type": "boolean",
+      "label": {
+        "en": "Silent arming",
+        "fr": "Armement silencieux",
+        "de": "Stilles Scharfschalten",
+        "es": "Armado silencioso"
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "allow_widget_disarm",
+      "type": "boolean",
+      "label": {
+        "en": "Allow disarming from the dashboard",
+        "fr": "Autoriser le désarmement depuis le tableau de bord",
+        "de": "Unscharfschalten über das Dashboard erlauben",
+        "es": "Permitir desarmar desde el panel"
+      },
+      "description": {
+        "en": "Shows a Disarm button on the Alarm panel widget. Anyone who can see the dashboard could then disarm the alarm.",
+        "fr": "Affiche un bouton Désarmer sur le widget Centrale d'alarme. Toute personne voyant le tableau de bord pourra alors désarmer l'alarme.",
+        "de": "Zeigt eine Unscharf-Schaltfläche im Widget Alarmzentrale. Jeder, der das Dashboard sieht, könnte dann die Alarmanlage unscharf schalten.",
+        "es": "Muestra un botón Desarmar en el widget Central de alarma. Cualquiera que vea el panel podría entonces desarmar la alarma."
+      },
+      "required": false,
+      "default": false
+    }
+  ],
+  "actions": [
+    {
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Signs in to Alarm.com and lists what was found.",
+        "fr": "Se connecte à Alarm.com et liste ce qui a été trouvé.",
+        "de": "Meldet sich bei Alarm.com an und zeigt, was gefunden wurde.",
+        "es": "Inicia sesión en Alarm.com y muestra lo encontrado."
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "key": "send_otp",
+      "label": {
+        "en": "Send a two-factor code",
+        "fr": "Envoyer un code de double authentification",
+        "de": "Zwei-Faktor-Code senden",
+        "es": "Enviar un código de doble factor"
+      },
+      "description": {
+        "en": "Only for codes received by SMS or email. With an authenticator app, go straight to the verification.",
+        "fr": "Uniquement pour les codes reçus par SMS ou e-mail. Avec une application d'authentification, passez directement à la validation.",
+        "de": "Nur für Codes per SMS oder E-Mail. Mit einer Authenticator-App direkt zur Prüfung gehen.",
+        "es": "Solo para códigos recibidos por SMS o correo. Con una aplicación de autenticación, pase directamente a la verificación."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "method",
+          "type": "select",
+          "label": {
+            "en": "Send by",
+            "fr": "Envoyer par",
+            "de": "Senden per",
+            "es": "Enviar por"
+          },
+          "required": true,
+          "default": "sms",
+          "options": [
+            {
+              "value": "sms",
+              "label": {
+                "en": "SMS",
+                "fr": "SMS",
+                "de": "SMS",
+                "es": "SMS"
+              }
+            },
+            {
+              "value": "email",
+              "label": {
+                "en": "Email",
+                "fr": "E-mail",
+                "de": "E-Mail",
+                "es": "Correo electrónico"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "verify_otp",
+      "label": {
+        "en": "Verify the two-factor code",
+        "fr": "Valider le code de double authentification",
+        "de": "Zwei-Faktor-Code prüfen",
+        "es": "Verificar el código de doble factor"
+      },
+      "description": {
+        "en": "Gladys is then remembered as a trusted device: the code is not asked again.",
+        "fr": "Gladys est ensuite mémorisé comme appareil de confiance : le code n'est plus demandé.",
+        "de": "Gladys wird danach als vertrauenswürdiges Gerät gespeichert: Der Code wird nicht erneut verlangt.",
+        "es": "Gladys queda registrado como dispositivo de confianza: el código no se vuelve a pedir."
+      },
+      "timeout_seconds": 60,
+      "fields": [
+        {
+          "key": "method",
+          "type": "select",
+          "label": {
+            "en": "Code received by",
+            "fr": "Code reçu par",
+            "de": "Code erhalten per",
+            "es": "Código recibido por"
+          },
+          "required": true,
+          "default": "app",
+          "options": [
+            {
+              "value": "app",
+              "label": {
+                "en": "Authenticator app",
+                "fr": "Application d'authentification",
+                "de": "Authenticator-App",
+                "es": "Aplicación de autenticación"
+              }
+            },
+            {
+              "value": "sms",
+              "label": {
+                "en": "SMS",
+                "fr": "SMS",
+                "de": "SMS",
+                "es": "SMS"
+              }
+            },
+            {
+              "value": "email",
+              "label": {
+                "en": "Email",
+                "fr": "E-mail",
+                "de": "E-Mail",
+                "es": "Correo electrónico"
+              }
+            }
+          ]
+        },
+        {
+          "key": "code",
+          "type": "string",
+          "label": {
+            "en": "Code",
+            "fr": "Code",
+            "de": "Code",
+            "es": "Código"
+          },
+          "placeholder": {
+            "en": "e.g. 123456",
+            "fr": "ex. 123456",
+            "de": "z. B. 123456",
+            "es": "p. ej. 123456"
+          },
+          "required": true
+        }
+      ]
+    }
+  ],
+  "scene_triggers": [
+    {
+      "key": "alarm_state_changed",
+      "label": {
+        "en": "Alarm.com: arming state changed",
+        "fr": "Alarm.com : état d'armement modifié",
+        "de": "Alarm.com: Scharfschaltzustand geändert",
+        "es": "Alarm.com: estado de armado cambiado"
+      },
+      "description": {
+        "en": "A partition was armed or disarmed (from Gladys, a keypad, the app...).",
+        "fr": "Une partition a été armée ou désarmée (Gladys, clavier, application...).",
+        "de": "Eine Partition wurde scharf oder unscharf geschaltet (Gladys, Bedienteil, App...).",
+        "es": "Una partición se armó o desarmó (Gladys, teclado, aplicación...)."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Partition",
+            "fr": "Partition",
+            "de": "Partition",
+            "es": "Partición"
+          },
+          "required": false
+        },
+        {
+          "key": "state",
+          "type": "multi_select",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          },
+          "options": [
+            {
+              "value": "disarmed",
+              "label": {
+                "en": "Disarmed",
+                "fr": "Désarmée",
+                "de": "Unscharf",
+                "es": "Desarmada"
+              }
+            },
+            {
+              "value": "armed_away",
+              "label": {
+                "en": "Armed away",
+                "fr": "Armée (absence)",
+                "de": "Extern scharf",
+                "es": "Armada ausente"
+              }
+            },
+            {
+              "value": "armed_stay",
+              "label": {
+                "en": "Armed stay",
+                "fr": "Armée (présence)",
+                "de": "Intern scharf",
+                "es": "Armada en casa"
+              }
+            },
+            {
+              "value": "armed_night",
+              "label": {
+                "en": "Armed night",
+                "fr": "Armée (nuit)",
+                "de": "Nacht scharf",
+                "es": "Armada noche"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          }
+        },
+        {
+          "key": "previous_state",
+          "type": "string",
+          "label": {
+            "en": "Previous state",
+            "fr": "État précédent",
+            "de": "Vorheriger Zustand",
+            "es": "Estado anterior"
+          }
+        },
+        {
+          "key": "partition_name",
+          "type": "string",
+          "label": {
+            "en": "Partition name",
+            "fr": "Nom de la partition",
+            "de": "Name der Partition",
+            "es": "Nombre de la partición"
+          }
+        }
+      ]
+    },
+    {
+      "key": "sensor_triggered",
+      "label": {
+        "en": "Alarm.com: sensor triggered",
+        "fr": "Alarm.com : capteur déclenché",
+        "de": "Alarm.com: Sensor ausgelöst",
+        "es": "Alarm.com: sensor activado"
+      },
+      "description": {
+        "en": "A door or window opened, motion, water, smoke, CO or glass break was detected.",
+        "fr": "Ouverture d'une porte ou fenêtre, mouvement, eau, fumée, CO ou bris de vitre détecté.",
+        "de": "Tür oder Fenster geöffnet, Bewegung, Wasser, Rauch, CO oder Glasbruch erkannt.",
+        "es": "Se abrió una puerta o ventana, o se detectó movimiento, agua, humo, CO o rotura de cristal."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Sensor",
+            "fr": "Capteur",
+            "de": "Sensor",
+            "es": "Sensor"
+          },
+          "required": false
+        },
+        {
+          "key": "kind",
+          "type": "multi_select",
+          "label": {
+            "en": "Detection",
+            "fr": "Détection",
+            "de": "Erkennung",
+            "es": "Detección"
+          },
+          "options": [
+            {
+              "value": "opening",
+              "label": {
+                "en": "Opening",
+                "fr": "Ouverture",
+                "de": "Öffnung",
+                "es": "Apertura"
+              }
+            },
+            {
+              "value": "motion",
+              "label": {
+                "en": "Motion",
+                "fr": "Mouvement",
+                "de": "Bewegung",
+                "es": "Movimiento"
+              }
+            },
+            {
+              "value": "leak",
+              "label": {
+                "en": "Water leak",
+                "fr": "Fuite d'eau",
+                "de": "Wasserleck",
+                "es": "Fuga de agua"
+              }
+            },
+            {
+              "value": "smoke",
+              "label": {
+                "en": "Smoke",
+                "fr": "Fumée",
+                "de": "Rauch",
+                "es": "Humo"
+              }
+            },
+            {
+              "value": "co",
+              "label": {
+                "en": "Carbon monoxide",
+                "fr": "Monoxyde de carbone",
+                "de": "Kohlenmonoxid",
+                "es": "Monóxido de carbono"
+              }
+            },
+            {
+              "value": "glass_break",
+              "label": {
+                "en": "Glass break",
+                "fr": "Bris de vitre",
+                "de": "Glasbruch",
+                "es": "Rotura de cristal"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "kind",
+          "type": "string",
+          "label": {
+            "en": "Detection",
+            "fr": "Détection",
+            "de": "Erkennung",
+            "es": "Detección"
+          }
+        },
+        {
+          "key": "sensor_name",
+          "type": "string",
+          "label": {
+            "en": "Sensor name",
+            "fr": "Nom du capteur",
+            "de": "Name des Sensors",
+            "es": "Nombre del sensor"
+          }
+        }
+      ]
+    },
+    {
+      "key": "lock_state_changed",
+      "label": {
+        "en": "Alarm.com: lock locked or unlocked",
+        "fr": "Alarm.com : serrure verrouillée ou déverrouillée",
+        "de": "Alarm.com: Schloss ver- oder entriegelt",
+        "es": "Alarm.com: cerradura bloqueada o desbloqueada"
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Lock",
+            "fr": "Serrure",
+            "de": "Schloss",
+            "es": "Cerradura"
+          },
+          "required": false
+        },
+        {
+          "key": "state",
+          "type": "multi_select",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          },
+          "options": [
+            {
+              "value": "locked",
+              "label": {
+                "en": "Locked",
+                "fr": "Verrouillée",
+                "de": "Verriegelt",
+                "es": "Bloqueada"
+              }
+            },
+            {
+              "value": "unlocked",
+              "label": {
+                "en": "Unlocked",
+                "fr": "Déverrouillée",
+                "de": "Entriegelt",
+                "es": "Desbloqueada"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "New state",
+            "fr": "Nouvel état",
+            "de": "Neuer Zustand",
+            "es": "Nuevo estado"
+          }
+        },
+        {
+          "key": "lock_name",
+          "type": "string",
+          "label": {
+            "en": "Lock name",
+            "fr": "Nom de la serrure",
+            "de": "Name des Schlosses",
+            "es": "Nombre de la cerradura"
+          }
+        }
+      ]
+    },
+    {
+      "key": "low_battery",
+      "label": {
+        "en": "Alarm.com: low battery",
+        "fr": "Alarm.com : pile faible",
+        "de": "Alarm.com: Batterie schwach",
+        "es": "Alarm.com: batería baja"
+      },
+      "description": {
+        "en": "A sensor or a lock reports a low battery.",
+        "fr": "Un capteur ou une serrure signale une pile faible.",
+        "de": "Ein Sensor oder ein Schloss meldet eine schwache Batterie.",
+        "es": "Un sensor o una cerradura indica batería baja."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
+          },
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "device_name",
+          "type": "string",
+          "label": {
+            "en": "Device name",
+            "fr": "Nom de l'appareil",
+            "de": "Gerätename",
+            "es": "Nombre del dispositivo"
+          }
+        }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "arm_system",
+      "label": {
+        "en": "Alarm.com: arm",
+        "fr": "Alarm.com : armer",
+        "de": "Alarm.com: scharf schalten",
+        "es": "Alarm.com: armar"
+      },
+      "description": {
+        "en": "Arms one partition, or every partition.",
+        "fr": "Arme une partition, ou toutes les partitions.",
+        "de": "Schaltet eine oder alle Partitionen scharf.",
+        "es": "Arma una partición o todas."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Partition",
+            "fr": "Partition",
+            "de": "Partition",
+            "es": "Partición"
+          },
+          "required": false,
+          "description": {
+            "en": "Leave empty to target every partition.",
+            "fr": "Laissez vide pour viser toutes les partitions.",
+            "de": "Leer lassen, um alle Partitionen anzusprechen.",
+            "es": "Déjelo vacío para actuar sobre todas las particiones."
+          }
+        },
+        {
+          "key": "mode",
+          "type": "select",
+          "label": {
+            "en": "Mode",
+            "fr": "Mode",
+            "de": "Modus",
+            "es": "Modo"
+          },
+          "required": true,
+          "default": "armed_away",
+          "options": [
+            {
+              "value": "armed_away",
+              "label": {
+                "en": "Armed away",
+                "fr": "Armée (absence)",
+                "de": "Extern scharf",
+                "es": "Armada ausente"
+              }
+            },
+            {
+              "value": "armed_stay",
+              "label": {
+                "en": "Armed stay",
+                "fr": "Armée (présence)",
+                "de": "Intern scharf",
+                "es": "Armada en casa"
+              }
+            },
+            {
+              "value": "armed_night",
+              "label": {
+                "en": "Armed night",
+                "fr": "Armée (nuit)",
+                "de": "Nacht scharf",
+                "es": "Armada noche"
+              }
+            }
+          ]
+        },
+        {
+          "key": "force_bypass",
+          "type": "boolean",
+          "label": {
+            "en": "Bypass open sensors",
+            "fr": "Ignorer les capteurs ouverts",
+            "de": "Offene Sensoren überbrücken",
+            "es": "Anular sensores abiertos"
+          },
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "no_entry_delay",
+          "type": "boolean",
+          "label": {
+            "en": "No entry delay",
+            "fr": "Sans délai d'entrée",
+            "de": "Ohne Eingangsverzögerung",
+            "es": "Sin retardo de entrada"
+          },
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "silent_arming",
+          "type": "boolean",
+          "label": {
+            "en": "Silent arming",
+            "fr": "Armement silencieux",
+            "de": "Stilles Scharfschalten",
+            "es": "Armado silencioso"
+          },
+          "required": false,
+          "default": false
+        }
+      ],
+      "outputs": [
+        {
+          "key": "success",
+          "type": "boolean",
+          "label": {
+            "en": "Command sent",
+            "fr": "Commande envoyée",
+            "de": "Befehl gesendet",
+            "es": "Orden enviada"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "Requested state",
+            "fr": "État demandé",
+            "de": "Angeforderter Zustand",
+            "es": "Estado solicitado"
+          }
+        },
+        {
+          "key": "partitions",
+          "type": "number",
+          "label": {
+            "en": "Partitions",
+            "fr": "Partitions",
+            "de": "Partitionen",
+            "es": "Particiones"
+          }
+        }
+      ]
+    },
+    {
+      "key": "disarm_system",
+      "label": {
+        "en": "Alarm.com: disarm",
+        "fr": "Alarm.com : désarmer",
+        "de": "Alarm.com: unscharf schalten",
+        "es": "Alarm.com: desarmar"
+      },
+      "description": {
+        "en": "Disarms one partition, or every partition.",
+        "fr": "Désarme une partition, ou toutes les partitions.",
+        "de": "Schaltet eine oder alle Partitionen unscharf.",
+        "es": "Desarma una partición o todas."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Partition",
+            "fr": "Partition",
+            "de": "Partition",
+            "es": "Partición"
+          },
+          "required": false,
+          "description": {
+            "en": "Leave empty to target every partition.",
+            "fr": "Laissez vide pour viser toutes les partitions.",
+            "de": "Leer lassen, um alle Partitionen anzusprechen.",
+            "es": "Déjelo vacío para actuar sobre todas las particiones."
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "success",
+          "type": "boolean",
+          "label": {
+            "en": "Command sent",
+            "fr": "Commande envoyée",
+            "de": "Befehl gesendet",
+            "es": "Orden enviada"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "Requested state",
+            "fr": "État demandé",
+            "de": "Angeforderter Zustand",
+            "es": "Estado solicitado"
+          }
+        },
+        {
+          "key": "partitions",
+          "type": "number",
+          "label": {
+            "en": "Partitions",
+            "fr": "Partitions",
+            "de": "Partitionen",
+            "es": "Particiones"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_system_status",
+      "label": {
+        "en": "Alarm.com: read the status",
+        "fr": "Alarm.com : lire l'état",
+        "de": "Alarm.com: Zustand lesen",
+        "es": "Alarm.com: leer el estado"
+      },
+      "description": {
+        "en": "Reads Alarm.com now: arming state, open sensors, low batteries.",
+        "fr": "Lit Alarm.com maintenant : armement, capteurs ouverts, piles faibles.",
+        "de": "Liest Alarm.com jetzt: Scharfschaltung, offene Sensoren, schwache Batterien.",
+        "es": "Lee Alarm.com ahora: armado, sensores abiertos, baterías bajas."
+      },
+      "timeout_seconds": 30,
+      "outputs": [
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "Arming state",
+            "fr": "État d'armement",
+            "de": "Scharfschaltzustand",
+            "es": "Estado de armado"
+          }
+        },
+        {
+          "key": "armed",
+          "type": "boolean",
+          "label": {
+            "en": "Armed",
+            "fr": "Armée",
+            "de": "Scharf",
+            "es": "Armada"
+          }
+        },
+        {
+          "key": "open_sensors",
+          "type": "number",
+          "label": {
+            "en": "Open or active sensors",
+            "fr": "Capteurs ouverts ou actifs",
+            "de": "Offene oder aktive Sensoren",
+            "es": "Sensores abiertos o activos"
+          }
+        },
+        {
+          "key": "open_sensor_names",
+          "type": "string",
+          "label": {
+            "en": "Names of the open sensors",
+            "fr": "Noms des capteurs ouverts",
+            "de": "Namen der offenen Sensoren",
+            "es": "Nombres de los sensores abiertos"
+          }
+        },
+        {
+          "key": "low_battery",
+          "type": "number",
+          "label": {
+            "en": "Low batteries",
+            "fr": "Piles faibles",
+            "de": "Schwache Batterien",
+            "es": "Baterías bajas"
+          }
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "key": "alarm_panel",
+      "label": {
+        "en": "Alarm panel",
+        "fr": "Centrale d'alarme",
+        "de": "Alarmzentrale",
+        "es": "Central de alarma"
+      },
+      "description": {
+        "en": "Arming state, open sensors and arming buttons.",
+        "fr": "État d'armement, capteurs ouverts et boutons d'armement.",
+        "de": "Scharfschaltzustand, offene Sensoren und Schaltflächen.",
+        "es": "Estado de armado, sensores abiertos y botones de armado."
+      },
+      "icon": "shield",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "partition",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Partition",
+            "fr": "Partition",
+            "de": "Partition",
+            "es": "Partición"
+          },
+          "description": {
+            "en": "Leave empty to show the first partition.",
+            "fr": "Laissez vide pour afficher la première partition.",
+            "de": "Leer lassen, um die erste Partition anzuzeigen.",
+            "es": "Déjelo vacío para mostrar la primera partición."
+          },
+          "required": false
+        }
+      ]
+    },
+    {
+      "key": "sensors_overview",
+      "label": {
+        "en": "Alarm sensors",
+        "fr": "Capteurs d'alarme",
+        "de": "Alarmsensoren",
+        "es": "Sensores de alarma"
+      },
+      "description": {
+        "en": "Open, active and low-battery sensors first.",
+        "fr": "Capteurs ouverts, actifs ou à pile faible en premier.",
+        "de": "Offene, aktive und schwache Sensoren zuerst.",
+        "es": "Primero los sensores abiertos, activos o con batería baja."
+      },
+      "icon": "eye"
+    }
+  ]
+}
