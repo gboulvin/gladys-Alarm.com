@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-23
+
 ### Added
 
 - Alarm.com cloud integration, built on the official JavaScript template:
@@ -30,4 +32,5 @@ the notes of the version's GitHub Release.
 - Every user-facing text in English, French, German and Spanish, and the user
   documentation in the four languages.
 
-[Unreleased]: https://github.com/gboulvin/gladys-alarm.com/commits/main
+[Unreleased]: https://github.com/gboulvin/gladys-Alarm.com/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gboulvin/gladys-Alarm.com/releases/tag/v1.0.0

@@ -8,8 +8,8 @@
     "de": "Steuern Sie Ihre Alarm.com-Anlage: Scharfschaltung, Sensoren, Schlösser, Tore, Licht.",
     "es": "Controle su alarma Alarm.com: armado, sensores, cerraduras, garajes y luces."
   },
-  "version": "0.0.0",
-  "docker_image": "ghcr.io/gboulvin/gladys-alarm.com:0.0.0",
+  "version": "1.0.0",
+  "docker_image": "ghcr.io/gboulvin/gladys-alarm.com:1.0.0",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/gboulvin/gladys-alarm.com/main/cover.png",
   "categories": ["security", "lighting", "climate"],

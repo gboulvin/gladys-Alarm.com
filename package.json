@@ -1,6 +1,6 @@
 {
   "name": "gladys-alarm-com",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Gladys Assistant external integration for Alarm.com security systems: partitions, sensors, locks, garage doors, lights and thermostats.",
   "type": "module",
